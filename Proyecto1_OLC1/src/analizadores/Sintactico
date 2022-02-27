@@ -1,0 +1,154 @@
+package analizadores; 
+import java_cup.runtime.*;
+import java.util.ArrayList;
+
+parser code 
+{:
+
+    //Aqui guardaremos las regex que se declaren
+    public ArrayList<Arbol> Regex = new ArrayList<>();
+    public ArrayList<Arbol> Recuperadas = new ArrayList<>();
+
+    //Aqui se guardaran los errores que vayan surgiendo 
+    public ArrayList<Excepcion> Errores = new ArrayList<>();
+
+    //Aqui se guardara las cadenas de JSON de salida
+    public ArrayList<ObjetoError> validaciones = new ArrayList<>();
+
+    //Aqui se guardaran los conjuntos que se declaren
+    public ArrayList<Conjunto> conjuntos = new ArrayList<>();
+
+    //Metodo para recuperar una regex
+    public Arbol Recuperar(String name){
+        for(int i = 0; i < Recuperadas.size(); i++){
+            if(name.equals(Recuperadas.get(i).nombre)){
+                return Recuperadas.get(i);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Método al que se llama automáticamente ante algún error sintactico.
+     **/ 
+    public void syntax_error(Symbol s){ 
+        Errores.add(new Excepcion("Sintáctico", "Error de sintaxis detectado. Se detectó: " + s.value, s.left + "", s.right + ""));
+    } 
+
+
+    /**
+     * Método al que se llama automáticamente ante algún error sintáctico 
+     * en el que ya no es posible una recuperación de errores.
+     **/ 
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{ 
+        System.out.println("Error síntactico irrecuperable en la Línea " + 
+        (s.left)+ " Columna "+s.right+". Componente " + s.value + 
+        " no reconocido."); 
+    } 
+
+    public ArrayList<Excepcion> getErrores(){
+        return Errores;
+    } 
+:} 
+
+terminal String CONCATENACION,DISYUNCION,KLEEN,POSITIVA,UNAOCERO;
+terminal String PTCOMA,DOSPT,COMILLAS,COMILLA,COMA;
+terminal String LLAVEIZQ,LLAVEDER;
+terminal String PORCENTAJE,ASIGNACION,LEXEMA,LEXEMARECONOCER;
+terminal String CARACTER, ESPECIAL;
+terminal String IDENTIFICADOR, ID;
+terminal String ENTERO;
+terminal String DECIMAL;
+terminal String CONJ, DEFINICIONCONJUNTO, DEFINICIONCONJUNTOCOMAS;
+
+non terminal ini;
+non terminal instrucciones;
+non terminal declaracionConj;
+non terminal String conjunto;
+non terminal String agrupacion;
+non terminal String listaCaracteres;
+non terminal decER;
+non terminal Arbol declaracionRegex;
+non terminal NodoArbol regex;
+non terminal declaracionLexema;
+non terminal lexemaReconocer;
+non terminal faseLexema;
+
+precedence left COMA;
+
+start with ini; 
+
+ini::= LLAVEIZQ 
+        instrucciones
+        LLAVEDER;
+
+instrucciones ::= 
+   declaracionConj instrucciones
+ | decER instrucciones
+ | declaracionConj
+ | decER
+ | PORCENTAJE PORCENTAJE faseLexema
+ | error instrucciones
+ | error PTCOMA instrucciones 
+; 
+
+decER ::=
+    declaracionRegex:b {:parser.Regex.add(b); b.inorden(); System.out.println(" ");:}
+;
+
+declaracionRegex ::=
+    LEXEMA:a ASIGNACION regex:b PTCOMA {:RESULT = new Arbol(a, b, parser.conjuntos);:}
+    
+;
+
+faseLexema ::=
+    declaracionLexema faseLexema
+  | declaracionLexema
+  | error 
+  | error faseLexema
+  | error PTCOMA
+ ;
+
+declaracionLexema ::=
+    LEXEMA:a DOSPT LEXEMARECONOCER:b PTCOMA {:if(parser.Recuperar(a) != null){
+        validaciones.add(parser.Recuperar(a).ReconocerCadena(b));
+        }else{
+            System.out.println("No se encontro el automata");
+        }
+        :} 
+    
+ ;
+
+declaracionConj ::=
+    CONJ DOSPT LEXEMA:a ASIGNACION conjunto:b PTCOMA {:parser.conjuntos.add(new Conjunto(a, b));:}
+    
+ ;
+
+conjunto ::=
+    agrupacion:a            {:RESULT = a;:}            
+  | listaCaracteres:a       {:RESULT = a;:}
+ ;
+
+agrupacion ::=
+    DEFINICIONCONJUNTO:a {:RESULT = a;:} 
+;
+
+listaCaracteres ::=
+    DEFINICIONCONJUNTOCOMAS:a {:RESULT = a;:} 
+;
+
+regex ::= 
+    CONCATENACION regex:c regex:d        {:RESULT = new NodoArbol("pt", c, d);:}
+  | DISYUNCION regex:a regex:b           {:RESULT = new NodoArbol("dis", a, b);:}
+  | KLEEN regex:e                        {:RESULT = new NodoArbol("kleen", e, null);:}
+  | POSITIVA regex:f                     {:RESULT = new NodoArbol("pos", f, null);:}
+  | UNAOCERO regex:g                     {:RESULT = new NodoArbol("uoc", g, null);:}
+  | LLAVEIZQ LEXEMA:a LLAVEDER           {:RESULT = new NodoArbol("{"+a+"}", null, null);:}
+  | CARACTER:a                           {:RESULT = new NodoArbol(a.replace("\"", ""), null, null);:}
+  | COMILLAS CONCATENACION:a COMILLAS    {:RESULT = new NodoArbol(a, null, null);:}
+  | COMILLAS DISYUNCION:a COMILLAS       {:RESULT = new NodoArbol(a, null, null);:}
+  | COMILLAS KLEEN:a COMILLAS            {:RESULT = new NodoArbol(a, null, null);:} 
+  | COMILLAS POSITIVA:a COMILLAS         {:RESULT = new NodoArbol(a, null, null);:}
+  | COMILLAS UNAOCERO:a COMILLAS         {:RESULT = new NodoArbol(a, null, null);:}
+  | ESPECIAL:a                           {:RESULT = new NodoArbol(a, null, null);:}
+;

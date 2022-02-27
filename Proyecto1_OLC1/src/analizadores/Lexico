@@ -1,0 +1,87 @@
+package analizadores;
+import java_cup.runtime.Symbol; 
+import java.util.ArrayList;
+
+%% 
+%class Lexico
+%public 
+%line 
+%char 
+%cup 
+%unicode
+%ignorecase
+
+%{
+    public ArrayList<Excepcion> Errores; 
+%}
+
+%init{ 
+    yyline = 1; 
+    yychar = 1; 
+    Errores = new ArrayList();
+%init} 
+
+BLANCOS=[\040\t]+
+blan=[\040\t]*
+L=[a-zA-Z_]+
+le=[a-zA-Z_]
+D=[0-9]+
+d=[0-9]
+DD=[0-9]+("."[  |0-9]+)?
+signos=[!\"\'%+"|"¿¡#$&.+*_]
+sig=[!-"}"\040]
+
+aperturalinea="<!"
+cerrarlinea="!>"
+caracter=[\']([^\t\'\"\n]|(\\\")|(\\n)|(\\\')|(\\t))?[\']
+multiLinea = <!<*([^<!]|[^!]"<"|"!"[^>])*!*!>
+defconj = ({sig}{blan}"~"{blan}{sig})
+defconjComas = {sig}({blan}","{blan}{sig})+
+caracterInd = "\""{blan}{sig}{blan}"\""
+identific = "-"{blan}">"
+caracterEspecial = (\\n|\\\'|\\\")
+lexema = [\"](((\\\")|(\\n)|(\\\'))|[^\\\"\n])*[\"]
+
+%%
+
+"CONJ" {return new Symbol(sym.CONJ,yyline,yychar, yytext());} 
+
+    
+    {caracterEspecial} {return new Symbol(sym.ESPECIAL,yyline,yychar, yytext());}
+    ";" {return new Symbol(sym.PTCOMA,yyline,yychar, yytext());} 
+    ":" {return new Symbol(sym.DOSPT,yyline,yychar, yytext());}
+    "\"" {return new Symbol(sym.COMILLAS,yyline,yychar, yytext());}
+    "\'" {return new Symbol(sym.COMILLA,yyline,yychar, yytext());}
+    "," {return new Symbol(sym.COMA,yyline,yychar, yytext());}
+   
+    "{" {return new Symbol(sym.LLAVEIZQ,yyline,yychar, yytext());}
+    "}" {return new Symbol(sym.LLAVEDER,yyline,yychar, yytext());}
+    "%%" {return new Symbol(sym.PORCENTAJE,yyline,yychar, yytext());}  
+    {identific} {return new Symbol(sym.ASIGNACION,yyline,yychar, yytext());}
+    "." {return new Symbol(sym.CONCATENACION,yyline,yychar, yytext());}
+    "|" {return new Symbol(sym.DISYUNCION,yyline,yychar, yytext());}
+    "*" {return new Symbol(sym.KLEEN,yyline,yychar, yytext());}
+    "+" {return new Symbol(sym.POSITIVA,yyline,yychar, yytext());}
+    "?" {return new Symbol(sym.UNAOCERO,yyline,yychar, yytext());}
+    "id" {return new Symbol(sym.ID,yyline,yychar, yytext());}
+    
+
+    \n {yychar=1;}
+    "//".* {/*Ignore*/}
+    {multiLinea} {/*Ignore*/}
+    
+    {caracterInd} {return new Symbol(sym.CARACTER,yyline,yychar, yytext());}
+    {defconj} {return new Symbol(sym.DEFINICIONCONJUNTO,yyline,yychar, yytext());}
+    {defconjComas} {return new Symbol(sym.DEFINICIONCONJUNTOCOMAS,yyline,yychar, yytext());}
+    {lexema} {return new Symbol(sym.LEXEMARECONOCER,yyline,yychar, yytext());}
+    ({le}|{d})+ {return new Symbol(sym.LEXEMA,yyline,yychar, yytext());}
+    
+    {BLANCOS} {} 
+    ({L})({L}|{D})* {return new Symbol(sym.IDENTIFICADOR,yyline,yychar, yytext());}
+    {D} {return new Symbol(sym.ENTERO,yyline,yychar, yytext());} 
+    {DD} {return new Symbol(sym.DECIMAL,yyline,yychar, yytext());} 
+    
+
+    . {
+         Errores.add(new Excepcion("Léxico", "Caracter no válido detectado: " + yytext(), yyline + "", yychar + ""));
+    }
