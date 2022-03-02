@@ -350,7 +350,7 @@ class CUP$Sintactico$actions {
           /*. . . . . . . . . . . . . . . . . . . .*/
           case 9: // decER ::= declaracionRegex 
             {
-              Object RESULT = null;
+              Object RESULT =null;
 		int bleft = ((java_cup.runtime.Symbol)CUP$Sintactico$stack.peek()).left;
 		int bright = ((java_cup.runtime.Symbol)CUP$Sintactico$stack.peek()).right;
 		Arbol b = (Arbol)((java_cup.runtime.Symbol) CUP$Sintactico$stack.peek()).value;

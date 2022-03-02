@@ -1,0 +1,8 @@
+[
+{"Valor":"\\\u0027cadena entre comilla simple\\\u0027","ExpresionRegular":"EXP5","Resultado":"Cadena Valida"},
+{"Valor":"P-385fde","ExpresionRegular":"Pl","Resultado":"Cadena Valida"},
+{"Valor":"P388fdc","ExpresionRegular":"Pl","Resultado":"Cadena Valida"},
+{"Valor":"P38df8c","ExpresionRegular":"Pl","Resultado":"Cadena Invalida"},
+{"Valor":"P-38df8k","ExpresionRegular":"Pl","Resultado":"Cadena Invalida"},
+{"Valor":"K-385ffk","ExpresionRegular":"Pl","Resultado":"Cadena Invalida"} 
+]

@@ -1,0 +1,1 @@
+digraph G {rankdir = LR;node [shape=circle];inicio [shape=plaintext label="Inicio"];inicio -> S0;S0 -> S1 [label="{letra}"];S1 [peripheries=2];S1 -> S1 [label="{letra}"];S1 -> S1 [label="_"];S1 -> S1 [label="{digito}"];}

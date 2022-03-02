@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Vector;
 
 /**
@@ -34,7 +36,22 @@ public class Arbol {
         this.raiz = principalRoot;
         this.nombre = name;
         
+        this.enumerarIdentificadores();
+        this.definirAnulabilidad();
+        this.DefinirPrimeros();
+        this.DefinirUltimos();
+        this.imprimirPrimerosYUltimos();
         System.out.println("");
+        this.DefinirSiguientes();
+        this.PrintFollowTable();
+        this.DefinirTermianles();
+        this.TablaTransiciones();
+        this.PrintTransitionTable();
+        this.GraficarArbol();
+        this.GraficarSiguientes();
+        this.GraficarTransiciones();
+        this.GraficarAFD();
+        this.GraficarAFN();
         
         //Las siquientes configuraciones
     }
@@ -909,6 +926,183 @@ public class Arbol {
         }catch(Exception e){
         
         }
+    }
+    
+    public void GraficarAFN(){
+        try{
+            LinkedList<TransicionAFN> transiAFN;
+            transiAFN = this.GraphAFN(this.raiz);
+            ArrayList<Integer> comprobador = new ArrayList<>();
+            
+            for(int i = 0; i < transiAFN.size(); i++){
+                if(!comprobador.contains(transiAFN.get(i).estadoInicio)){
+                    comprobador.add(transiAFN.get(i).estadoInicio);
+                }
+                
+                if(!comprobador.contains(transiAFN.get(i).EstadoDestino)){
+                    comprobador.add(transiAFN.get(i).EstadoDestino);
+                }
+            }
+            
+            Collections.sort(comprobador);
+            
+            String name = "AFN" + this.nombre + ".dot";
+            String nombre = "AFND_201800992/AFN" + this.nombre + ".png";
+            File file = new File(name);
+            
+            if(file.exists()){
+                file.delete();
+            }
+            
+            file.createNewFile();
+            
+            FileWriter fw = new FileWriter(file, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write("digraph G { \n");
+            bw.write("rankdir=LR; \n");
+            bw.write("node [shape=circle]; \n");
+            
+            for(int i = 0; i < comprobador.size(); i++){
+                if(i == (comprobador.size() - 1)){
+                    bw.write("node" + comprobador.get(i) + " [label=\"S" + comprobador.get(i) + "\", shape=doublecircle]; \n");
+                }else{
+                    bw.write("node" + comprobador.get(i) + " [label=\"S" + comprobador.get(i) + "\"]; \n");
+                }
+            }
+            
+            for(int i = 0; i <transiAFN.size(); i++){
+                bw.write("node" + transiAFN.get(i).estadoInicio + " -> node" + transiAFN.get(i).EstadoDestino + 
+                        " [label=\"" + transiAFN.get(i).caracterTransicion + "\"]; \n");
+            }
+            bw.write("} \n");
+            bw.close();
+            String comando = "dot -Tpng " + name + " -o " + nombre;
+            Runtime.getRuntime().exec(comando);
+            
+            
+        }catch(Exception e){
+            
+        }
+    }
+    
+    public LinkedList<TransicionAFN> ReajusteLista(LinkedList<TransicionAFN> desajustada, int ajuste){
+        LinkedList<TransicionAFN> ajustada = new LinkedList<>();
+        for(int i = 0; i < desajustada.size(); i++){
+            TransicionAFN nodoAjustado = new TransicionAFN(desajustada.get(i).estadoInicio + ajuste, 
+            desajustada.get(i).caracterTransicion, desajustada.get(i).EstadoDestino + ajuste);
+            ajustada.add(nodoAjustado);
+        }
+        return ajustada;
+    }
+    
+    public int ObtenerNumeroDeNodos(LinkedList<TransicionAFN> transiciones){
+        int numeroNodos = 0;
+        ArrayList<Integer> estaditos = new ArrayList<>();
+        for(int i = 0; i < transiciones.size(); i++){
+            if(!estaditos.contains(transiciones.get(i).estadoInicio)){
+                numeroNodos++;
+                estaditos.add(transiciones.get(i).estadoInicio);
+            }
+            
+            if(!estaditos.contains(transiciones.get(i).EstadoDestino) && transiciones.get(i).EstadoDestino > -1){
+                numeroNodos++;
+                estaditos.add(transiciones.get(i).EstadoDestino);
+            }
+        }
+        return numeroNodos;
+    }
+    
+    public LinkedList<TransicionAFN> GraphAFN(NodoArbol nodito){
+        LinkedList<TransicionAFN> transiciones = new LinkedList<>();
+        int contador = 0;
+        if (nodito != null){
+            LinkedList<TransicionAFN> izq = GraphAFN(nodito.izquierdo);
+            LinkedList<TransicionAFN> der = GraphAFN(nodito.derecho);
+            
+            
+            //Llegando a este punto comenzamos con los metodos de definicion
+            //COMPROBANDO EL TIPO DE CADA UNO DE LOS NODOS DEL ARBOL
+            
+            if((nodito.izquierdo == null) && (nodito.derecho == null)){ //Es un nodo hoja
+                //Se hace la concatenacion mas basica 
+                TransicionAFN transicionTemporal = new TransicionAFN(contador, nodito.contenido, contador + 1);
+                transiciones.add(transicionTemporal);
+                TransicionAFN punteroNulo = new TransicionAFN(contador + 1, "vacio", -100);
+                transiciones.add(punteroNulo);
+                return transiciones;
+            }else{ //De no ser una hoja debemos comprobar que operacion es 
+                if("dis".equals(nodito.contenido)){
+                    TransicionAFN nueva = new TransicionAFN(contador, "ε", contador + 1);
+                    transiciones.add(nueva);
+                    izq = this.ReajusteLista(izq, 1);
+                    int ajuste2 = this.ObtenerNumeroDeNodos(izq) + 1;
+                    der = this.ReajusteLista(der, ajuste2);
+                    transiciones.add(new TransicionAFN(contador, "ε", ajuste2));
+                    ajuste2 = ajuste2 + this.ObtenerNumeroDeNodos(der);                   
+                    izq.getLast().caracterTransicion = "ε";
+                    izq.getLast().EstadoDestino = ajuste2;
+                    der.getLast().caracterTransicion = "ε";
+                    der.getLast().EstadoDestino = ajuste2;
+                    transiciones.addAll(izq);
+                    transiciones.addAll(der);
+                    transiciones.add(new TransicionAFN(ajuste2, "vacio", -100));
+                    return transiciones;
+                }else if("kleen".equals(nodito.contenido)){
+                    TransicionAFN nueva = new TransicionAFN(contador, "ε", contador + 1);
+                    transiciones.add(nueva);
+                    izq = this.ReajusteLista(izq, 1);                 
+                    izq.getLast().caracterTransicion = "ε";
+                    izq.getLast().EstadoDestino = izq.getFirst().estadoInicio;
+                    transiciones.addAll(izq);
+                    int ajuste = this.ObtenerNumeroDeNodos(izq) + 1;
+                    transiciones.add(new TransicionAFN(izq.getLast().estadoInicio, "ε", ajuste));
+                    transiciones.add(new TransicionAFN(contador, "ε", ajuste));
+                    transiciones.add(new TransicionAFN(ajuste, "vacio", -100));
+                    return transiciones;
+                }else if("uoc".equals(nodito.contenido)){
+                    TransicionAFN nueva = new TransicionAFN(contador, "ε", contador + 1);
+                    transiciones.add(nueva);
+                    izq = this.ReajusteLista(izq, 1); 
+                    int ajuste = this.ObtenerNumeroDeNodos(izq) + 1;
+                    izq.getLast().caracterTransicion = "ε";
+                    izq.getLast().EstadoDestino = ajuste;
+                    transiciones.addAll(izq);
+                    
+
+                    transiciones.add(new TransicionAFN(contador, "ε", ajuste));
+                    transiciones.add(new TransicionAFN(ajuste, "vacio", -100));
+                    return transiciones;
+                }else if("pos".equals(nodito.contenido)){
+                    TransicionAFN nueva = new TransicionAFN(contador, "ε", contador + 1);
+                    transiciones.add(nueva);
+                    izq = this.ReajusteLista(izq, 1);                 
+                    izq.getLast().caracterTransicion = "ε";
+                    izq.getLast().EstadoDestino = izq.getFirst().estadoInicio;
+                    transiciones.addAll(izq);
+                    int ajuste = this.ObtenerNumeroDeNodos(izq) + 1;
+                    transiciones.add(new TransicionAFN(izq.getLast().estadoInicio, "ε", ajuste));
+
+                    transiciones.add(new TransicionAFN(ajuste, "vacio", -100));
+                    return transiciones;
+                }else if("pt".equals(nodito.contenido)){
+                    if(nodito.derecho.contenido.equals("#")){
+                        izq.removeLast();
+                        return izq;
+                    }else{
+                        izq.removeLast();
+                        int ajuste;
+                        ajuste = this.ObtenerNumeroDeNodos(izq) - 1;
+                        der = this.ReajusteLista(der, ajuste);
+                        
+                        transiciones.addAll(izq);
+                        transiciones.addAll(der);
+                        return transiciones;
+                    }
+                }
+            }
+           
+        } 
+        return transiciones;  
     }
     
     
