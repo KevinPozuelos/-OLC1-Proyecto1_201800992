@@ -6,5 +6,5 @@ Token |  Exprecion Regular
  Letras | [a-zA-Z_]+, [a-zA-Z_]
  Digitos | [0-9]+, [0-9]
  Decimales| [0-9] + ("."[  |0-9]+)?
-signos | [!\"\'%+"|"¿¡#$&.+*_] , [!-"}"\040]
+signos |<code> [!\"\'%+"|"¿¡#$&.+*_] , [!-"}"\040]</code>
 Comentario multilinea | "<!"
