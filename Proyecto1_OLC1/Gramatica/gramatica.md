@@ -22,6 +22,6 @@ Gramatica Tipo 3
 --------
 ## inicial <h3>
 
-<code>{<br>  
-    Intrucciones <br>
-}<code> <br>
+<code> { -> Intrucciones <code> <br>  
+    <code> | </code><br>
+<code> } </code> <br>
