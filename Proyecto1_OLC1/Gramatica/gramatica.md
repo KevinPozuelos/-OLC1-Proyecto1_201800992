@@ -21,7 +21,8 @@ Palabras Reservadas: <code> "CONJ" </code> <br>
 Gramatica Tipo 3
 --------
 ## inicial <h3>
-
-<code> { -> Intrucciones <code><br>  
-<code> | </code><br>
-<code> } </code><br>
+```
+{ -> Intrucciones  
+| 
+} 
+```
