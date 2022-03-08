@@ -1,1 +1,0 @@
-digraph G {tabla1[shape=plaintext,fontsize=12, label=<<TABLE BORDER="1"><TR><TD>Estados</TD><TD>{simbols}</TD><TD>{minus}</TD><TD>{mayus}</TD></TR><TR><TD>S0 {1}</TD><TD>S1</TD><TD>--</TD><TD>--</TD></TR><TR><TD>S1 {1, 2, 3}</TD><TD>S1</TD><TD>S2</TD><TD>S2</TD></TR><TR><TD>S2 {2, 3, 4}</TD><TD>--</TD><TD>S2</TD><TD>S2</TD></TR></TABLE>>];}
